@@ -7,12 +7,14 @@ export const User = () => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
       email: "",
       name: "",
       category: "",
+      issue: ""
     },
   });
   const onSubmit = async (data) => {
@@ -23,9 +25,15 @@ export const User = () => {
         body: JSON.stringify(data),
       });
 
-      if (!req.ok) {
-        await req.json().catch(() => ({}));
-        alert("Something's wrong I can feel it");
+      const result = await req.json()
+
+      if (!result.ok) {
+        console.log("Something's wrong I can feel it", result.error);
+      }
+
+      if(result.success) {
+        reset()
+        alert("Ticket has been submitted!")
       }
     } catch (error) {
       alert("Something's wrong", error);
@@ -111,6 +119,20 @@ export const User = () => {
           {errors.category ? (
             <p className="text-red-500">You need to pick a category</p>
           ) : null}
+
+          <div>
+            <label htmlFor="issue">Tell us what happened</label>
+            <textarea 
+            id="issue"
+            rows="4"
+            cols="50"
+            {...register("issue", {
+              required: "Describe your issue"
+            })}
+            placeholder="Describe the issue in detail"
+            className={`border-2 ${errors.issue ? "border-red-300" : "border-zinc-200"} focus-ring-4 outline-none transition-all`}
+            ></textarea>
+          </div>
 
           <div>
             <button>{isSubmitting ? "Submitting..." : "Submit"}</button>
