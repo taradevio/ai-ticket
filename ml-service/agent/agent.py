@@ -1,6 +1,7 @@
 import datetime
 from zoneinfo import ZoneInfo
 from google.adk.agents import Agent
+from google.adk.runners import Runner
 
 def get_weather(city: str) -> dict:
     """Retrieves the current weather report for a specified city.
@@ -53,12 +54,14 @@ def get_current_time(city: str) -> dict:
     )
     return {"status": "success", "report": report}
 
+# def analyse_subject(ticket_id: str):
+    
 
 root_agent = Agent(
-    name="weather_time_agent",
+    name="ticket_analyzer_agent",
     model="gemini-2.0-flash",
     description=(
-        "Agent to answer questions about the time and weather in a city."
+        "Agent to analyse ticket details and summarize them."
     ),
     instruction=(
         "You are a helpful agent who can answer user questions about the time and weather in a city."
