@@ -25,10 +25,11 @@ export const User = () => {
         body: JSON.stringify(data),
       });
 
-      const result = await req.json()
+      const result = await req.json();
 
-      if (!result.ok) {
-        console.log("Something's wrong I can feel it", result.error);
+      if (!req.ok) {
+        console.log("Something's wrong I can feel it", req.error);
+        return;
       }
 
       if(result.success) {

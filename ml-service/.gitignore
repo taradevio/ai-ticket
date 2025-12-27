@@ -2,3 +2,5 @@
 .env
 .env.production
 .dev.vars
+.venv
+venv

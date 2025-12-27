@@ -5,6 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 type Env = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE: string;
+  ML_SERVICE: string;
+  SERVICE_KEY: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -12,7 +14,7 @@ const app = new Hono<{ Bindings: Env }>();
 app.use(
   "*",
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
     allowMethods: ["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"],
     allowHeaders: ["Content-Type"],
   })
@@ -49,6 +51,19 @@ app.post("/user/ticket", async (c) => {
     if (error) {
       console.error("Error when inserting data", error);
       return c.json({ success: false, error: "failed to create ticker" }, 500);
+    }
+
+    if(data) {
+      c.executionCtx.waitUntil(
+        fetch(`${c.env.ML_SERVICE}/tickets`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Service-Key": c.env.SERVICE_KEY
+          },
+          body: JSON.stringify({ticket_id: data.id})
+        })
+      )
     }
 
     return c.json(
