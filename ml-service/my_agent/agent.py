@@ -59,7 +59,7 @@ def get_current_time(city: str) -> dict:
 
 root_agent = Agent(
     name="ticket_analyzer_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash-lite",
     description=(
         "Agent to analyse ticket details and summarize them."
     ),
