@@ -53,17 +53,17 @@ app.post("/user/ticket", async (c) => {
       return c.json({ success: false, error: "failed to create ticker" }, 500);
     }
 
-    if(data) {
+    if (data) {
       c.executionCtx.waitUntil(
         fetch(`${c.env.ML_SERVICE}/tickets`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Service-Key": c.env.SERVICE_KEY
+            // "X-Service-Key": c.env.SERVICE_KEY
           },
-          body: JSON.stringify({ticket_id: data.id})
+          body: JSON.stringify({ ticket_id: data.id }),
         })
-      )
+      );
     }
 
     return c.json(
@@ -77,6 +77,21 @@ app.post("/user/ticket", async (c) => {
   } catch (error) {
     return c.json({ success: false, error: "Internal Server Error" }, 500);
   }
+});
+
+app.get("/fetch-tickets", async (c) => {
+  const db = supabase_service(c);
+
+  const { data: tickets, error } = await db
+    .from("tickets")
+    .select("id, ai_summary, name")
+    .order("created_at", { ascending: false })
+
+  if (!tickets || error) {
+    return c.json({ success: false, error: "Ticket not found" }, 404);
+  }
+
+  return c.json({ success: true, ticket: tickets }, 200);
 });
 
 export default app;

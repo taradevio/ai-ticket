@@ -1,70 +1,82 @@
-import datetime
-from zoneinfo import ZoneInfo
+import os
+from supabase import create_client, Client
+from dotenv import load_dotenv
 from google.adk.agents import Agent
 from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+load_dotenv()
+import logging
 
-def get_weather(city: str) -> dict:
-    """Retrieves the current weather report for a specified city.
+url: str = os.getenv("SUPABASE_URL")
+key: str = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
+logger = logging.getLogger("uvicorn.error")
 
-    Args:
-        city (str): The name of the city for which to retrieve the weather report.
+async def get_ticket(ticket_id: str) -> str:
+    """Fetch ticket details from database"""
+    try:
+        logger.info(f"🔍 Fetching ticket {ticket_id}")
+        response = (
+            supabase.table("tickets")
+            .select("id, name, category, issue_description")
+            .eq("id", ticket_id)
+            .single()
+            .execute()
+        )
+        
+        tickets = response.data
+        
+        if tickets:
+            issue_desc = tickets.get('issue_description', 'No Description')
+            logger.info(f"✅ Ticket {ticket_id} fetched: {issue_desc[:50]}...")
+            return issue_desc
+        else:
+            logger.warning(f"⚠️ Ticket {ticket_id} not found")
+            return "No ticket found"
+            
+    except Exception as e:
+        logger.error(f"❌ Error fetching ticket {ticket_id}: {e}")
+        return f"Error: {str(e)}"
 
-    Returns:
-        dict: status and result or error msg.
-    """
-    if city.lower() == "new york":
-        return {
-            "status": "success",
-            "report": (
-                "The weather in New York is sunny with a temperature of 25 degrees"
-                " Celsius (77 degrees Fahrenheit)."
-            ),
-        }
-    else:
-        return {
-            "status": "error",
-            "error_message": f"Weather information for '{city}' is not available.",
-        }
-
-
-def get_current_time(city: str) -> dict:
-    """Returns the current time in a specified city.
-
-    Args:
-        city (str): The name of the city for which to retrieve the current time.
-
-    Returns:
-        dict: status and result or error msg.
-    """
-
-    if city.lower() == "new york":
-        tz_identifier = "America/New_York"
-    else:
-        return {
-            "status": "error",
-            "error_message": (
-                f"Sorry, I don't have timezone information for {city}."
-            ),
-        }
-
-    tz = ZoneInfo(tz_identifier)
-    now = datetime.datetime.now(tz)
-    report = (
-        f'The current time in {city} is {now.strftime("%Y-%m-%d %H:%M:%S %Z%z")}'
-    )
-    return {"status": "success", "report": report}
-
-# def analyse_subject(ticket_id: str):
-    
+async def create_summary(ticket_id: str, summary: str) -> str:
+    """Save AI summary back to database"""
+    try:
+        logger.info(f"💾 Saving summary for ticket {ticket_id}")
+        logger.info(f"📝 Summary content: {summary}")
+        
+        response = (
+            supabase.table("tickets")
+            .update({"ai_summary": summary})
+            .eq("id", ticket_id)
+            .execute()
+        )
+        
+        logger.info(f"✅ Summary saved successfully for {ticket_id}")
+        return "Summary saved successfully"
+        
+    except Exception as e:
+        logger.error(f"❌ Error saving summary for {ticket_id}: {e}")
+        return f"Error saving: {str(e)}"
 
 root_agent = Agent(
-    name="ticket_analyzer_agent",
-    model="gemini-2.0-flash",
+    name="summary_agent",
+    model="gemini-2.5-flash",
     description=(
-        "Agent to analyse ticket details and summarize them."
+        "Technical QA Agent that analyzes ticket descriptions and creates concise subject lines for a ticketing system"
     ),
     instruction=(
-        "You are a helpful agent who can answer user questions about the time and weather in a city."
+        "You are a technical QA support subject-line specialist for a ticketing system. Follow these steps exactly:\n"
+        "1. CALL 'get_ticket' using the provided ticket ID to fetch the full issue description.\n"
+        "2. ANALYZE the description to identify the core problem (e.g., login error, payment failure, lag).\n"
+        "3. CREATE a professional, single-line subject (max 10 words). Example: 'Payment Gateway Timeout'.\n"
+        "4. CALL 'create_summary' with the ticket ID and the newly created subject to save it to the database.\n"
+        "Always complete all steps in order."
     ),
-    tools=[get_weather, get_current_time],
+    tools=[get_ticket, create_summary],
+)
+
+runner = Runner(
+    agent=root_agent,
+    app_name="summary-agent",
+    session_service=InMemorySessionService(),
 )

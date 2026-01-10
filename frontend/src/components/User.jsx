@@ -1,8 +1,10 @@
 import { useForm } from "react-hook-form";
+import { useNavigate } from "@tanstack/react-router";
 // import { useState } from "react";
 import { Select } from "./ui/Select";
 export const User = () => {
   const BACKEND = import.meta.env.VITE_BACKEND;
+  const navigate = useNavigate();
 
   const {
     register,
@@ -14,7 +16,7 @@ export const User = () => {
       email: "",
       name: "",
       category: "",
-      issue: ""
+      issue: "",
     },
   });
   const onSubmit = async (data) => {
@@ -32,9 +34,12 @@ export const User = () => {
         return;
       }
 
-      if(result.success) {
-        reset()
-        alert("Ticket has been submitted!")
+      if (result.success) {
+        reset();
+        alert("Ticket has been submitted!");
+        setTimeout(() => {
+          navigate({ to: "/tickets" });
+        }, 500);
       }
     } catch (error) {
       alert("Something's wrong", error);
@@ -123,15 +128,17 @@ export const User = () => {
 
           <div>
             <label htmlFor="issue">Tell us what happened</label>
-            <textarea 
-            id="issue"
-            rows="4"
-            cols="50"
-            {...register("issue", {
-              required: "Describe your issue"
-            })}
-            placeholder="Describe the issue in detail"
-            className={`border-2 ${errors.issue ? "border-red-300" : "border-zinc-200"} focus-ring-4 outline-none transition-all`}
+            <textarea
+              id="issue"
+              rows="4"
+              cols="50"
+              {...register("issue", {
+                required: "Describe your issue",
+              })}
+              placeholder="Describe the issue in detail"
+              className={`border-2 ${
+                errors.issue ? "border-red-300" : "border-zinc-200"
+              } focus-ring-4 outline-none transition-all`}
             ></textarea>
           </div>
 

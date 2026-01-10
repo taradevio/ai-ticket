@@ -4,3 +4,4 @@
 .dev.vars
 .venv
 venv
+venv_pydantic
