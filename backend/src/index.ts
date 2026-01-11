@@ -84,7 +84,7 @@ app.get("/fetch-tickets", async (c) => {
 
   const { data: tickets, error } = await db
     .from("tickets")
-    .select("id, ai_summary, name")
+    .select("id, ai_subject, name, ai_sentiment_score, category, priority, ai_sentiment")
     .order("created_at", { ascending: false })
 
   if (!tickets || error) {

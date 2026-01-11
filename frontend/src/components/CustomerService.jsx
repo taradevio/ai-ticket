@@ -37,10 +37,12 @@ export const CustomerService = () => {
           <p>Manage and track all customers support interactions</p>
         </div>
         <div>
-          <button className="btn btn-primary">
-            <Plus className="w-4" />
-            New Ticket
-          </button>
+          <a href="/ticket-submit" rel="noopener noreferrer">
+            <button className="btn btn-primary">
+              <Plus className="w-4" />
+              New Ticket
+            </button>
+          </a>
         </div>
       </div>
       <div className="my-5">
@@ -58,4 +60,4 @@ export const CustomerService = () => {
       </div>
     </div>
   );
-}
+};
