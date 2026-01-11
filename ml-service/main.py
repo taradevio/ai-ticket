@@ -76,10 +76,14 @@ async def safe_run_summary(ticket_id: str):
                 logger.info(f"Result: {str(event.tool_result)[:200]}")
 
             # Handle agent messages
-            if hasattr(event, "content") and hasattr(event.content, "parts"):
-                for part in event.content.parts:
-                    if hasattr(part, "text") and part.text:
-                        logger.info(f"Agent: {part.text[:200]}")
+            content = getattr(event, "content", None)
+            if content:
+                # Ambil parts, kalau None atau ga ada, default ke list kosong []
+                parts = getattr(content, "parts", []) or []
+                for part in parts:
+                    text = getattr(part, "text", None)
+                    if text:
+                        logger.info(f"Agent: {text[:200]}")
 
             # Check for final response
             if hasattr(event, "is_final_response"):
